@@ -17,6 +17,10 @@
 #                         Lower bound or random wait time after a click.
 #   -x postClickDelayMax, --postClickDelayMax postClickDelayMax
 #                         Upper bound of random wait time after a click.
+#   -c factor, --coordinateFactor factor
+#                         Divides the pyautogui reported location by this number
+#                         to adjust click location. Try supplying 2 if clicks
+#                         are not accurate.
 
 
 import pyautogui as pg
@@ -39,10 +43,13 @@ parser.add_argument('-f', '--frequency', help='Frequency in Hz to search the scr
                     type=int, metavar='searchFrequency', required=False, default=3, choices=range(1,11))
 parser.add_argument('-d', '--delay', help='Delay in seconds between program seeing the input image on screen and clicking it.',
                     type=int, metavar='preClickDelay', required=False, default=0)
-parser.add_argument('-n', '--postClickDelayMin', help='Lower bound or random wait time after a click.',
+parser.add_argument('-n', '--postClickDelayMin', help='Lower bound of random wait time after a click.',
                     type=int, metavar='postClickDelayMin', required=False, default=5)
 parser.add_argument('-x', '--postClickDelayMax', help='Upper bound of random wait time after a click.',
                     type=int, metavar='postClickDelayMax', required=False, default=9)
+parser.add_argument('-c', '--coordinateFactor', help='Divides the pyautogui reported location by this number to adjust click \
+                    location.  Try supplying 2 if clicks are not accurate.', metavar='factor', required=False, type=int,
+                    default=1, choices=range(1,11))
 args = parser.parse_args()
 
 
@@ -54,6 +61,7 @@ def main():
     searchPeriod = 1/args.frequency
     postClickDelayMin = args.postClickDelayMin
     postClickDelayMax = args.postClickDelayMax
+    coordinateFactor = args.coordinateFactor
 
     if not Path(imgPath).exists():
         print("\nPath supplied does not exist.\n")
@@ -122,22 +130,22 @@ def main():
 
                 # get the correct click location, suspect
                 # this need is related to the resolution on this mac
-                x = location.x#/2
-                y = location.y#/2
+                x = location.x/coordinateFactor
+                y = location.y/coordinateFactor
 
                 # click the image twice, once to activate the window
                 # another time to actually click the button if it is one
                 pg.click(x, y)
                 pg.click(x, y)
 
+                # put mouse back to original location
+                mouse.position = origPos
+
                 # switch back to the previously active window
                 with keyboard.pressed(Key.cmd):
                     keyboard.press(Key.tab)
                     sleep(0.18)
                     keyboard.release(Key.tab)
-
-                # put mouse back to original location
-                mouse.position = origPos
 
                 # update counter and inform user what has occured
                 counter += 1
